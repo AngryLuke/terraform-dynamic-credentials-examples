@@ -5,6 +5,16 @@ provider "tfe" {
   hostname = var.tfc_hostname
 }
 
+data "tfe_project" "proj" {
+  name         = var.tfc_project_name
+  organization = var.tfc_organization_name
+}
+
+# Fetch full_name of repository name
+data "github_repository" "my_repo" {
+  name = var.workspace_vcs_repo_name
+}
+
 # Runs in this workspace will be automatically authenticated
 # to AWS with the permissions set in the AWS policy.
 #
@@ -12,6 +22,14 @@ provider "tfe" {
 resource "tfe_workspace" "my_workspace" {
   name         = var.tfc_workspace_name
   organization = var.tfc_organization_name
+  project_id   = data.tfe_project.proj.id
+  auto_apply   = true
+
+  # set the VCS workflow and add a repo to the workspace
+  vcs_repo {
+    identifier     = data.github_repository.my_repo.full_name
+    oauth_token_id = var.oauth_token_id
+  }
 }
 
 # The following variables must be set to allow runs
@@ -40,12 +58,12 @@ resource "tfe_variable" "tfc_aws_role_arn" {
 
 # The following variables are optional; uncomment the ones you need!
 
-# resource "tfe_variable" "tfc_aws_audience" {
-#   workspace_id = tfe_workspace.my_workspace.id
+resource "tfe_variable" "tfc_aws_audience" {
+  workspace_id = tfe_workspace.my_workspace.id
 
-#   key      = "TFC_AWS_WORKLOAD_IDENTITY_AUDIENCE"
-#   value    = var.tfc_aws_audience
-#   category = "env"
+  key      = "TFC_AWS_WORKLOAD_IDENTITY_AUDIENCE"
+  value    = var.tfc_aws_audience
+  category = "env"
 
-#   description = "The value to use as the audience claim in run identity tokens"
-# }
+  description = "The value to use as the audience claim in run identity tokens"
+}

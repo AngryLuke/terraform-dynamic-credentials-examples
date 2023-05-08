@@ -66,7 +66,7 @@ resource "aws_iam_policy" "tfc_policy" {
    {
      "Effect": "Allow",
      "Action": [
-       "s3:ListBucket"
+       "ec2:*"
      ],
      "Resource": "*"
    }
