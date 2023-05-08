@@ -5,13 +5,17 @@ provider "tfe" {
   hostname = var.tfc_hostname
 }
 
+provider "github" {
+  token = var.github_token
+}
+
 data "tfe_project" "proj" {
   name         = var.tfc_project_name
   organization = var.tfc_organization_name
 }
 
 # Fetch full_name of repository name
-data "github_repository" "my_repo" {
+data "github_repository" "repo" {
   name = var.workspace_vcs_repo_name
 }
 
@@ -27,8 +31,8 @@ resource "tfe_workspace" "my_workspace" {
 
   # set the VCS workflow and add a repo to the workspace
   vcs_repo {
-    identifier     = data.github_repository.my_repo.full_name
-    oauth_token_id = var.oauth_token_id
+    identifier     = data.github_repository.repo.full_name
+    oauth_token_id = var.vcs_oauth_token_id
   }
 }
 

@@ -1,6 +1,11 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+variable "aws_region" {
+  type        = string
+  description = "AWS region name to auth"
+}
+
 variable "tfc_aws_audience" {
   type        = string
   default     = "aws.workload.identity"
@@ -36,9 +41,16 @@ variable "workspace_vcs_repo_name" {
   description = "The name of the VCS repo that you'd like to connect to the workspace"
 }
 
-variable "oauth_token_id" {
+variable "github_token" {
   type        = string
-  description = "GitHub OAuth token for the CVS set up in TFC CVS"
+  description = "GitHub OAuth token used for GitHub provider"
+  default     = null
+  sensitive   = true
+}
+
+variable "vcs_oauth_token_id" {
+  type        = string
+  description = "OAuth token ID used by VCS provider configured in TFC"
   default     = null
   sensitive   = true
 }
