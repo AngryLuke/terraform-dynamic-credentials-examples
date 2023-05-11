@@ -57,7 +57,7 @@ EOF
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy
 resource "aws_iam_policy" "tfc_policy" {
-  name        = "tfc-policy"
+  name        = "ec2-tfc-policy"
   description = "TFC run policy"
 
   policy = <<EOF
