@@ -1,9 +1,9 @@
 terraform {
   cloud {
-    organization = "italy-hashiworkshops"
+    organization = "event-observability-datadog"
 
     workspaces {
-      name = "workload-identity-stuff"
+      name = "aws-workload-identity"
     }
   }
 }

@@ -6,10 +6,10 @@ variable "aws_region" {
   description = "AWS region name to auth"
 }
 
-variable "tfc_aws_audience" {
+variable "tfc_oidc_arn" {
   type        = string
-  default     = "aws.workload.identity"
-  description = "The audience value to use in run identity tokens"
+  default     = null
+  description = "AWS ARN of tfc_hostname oidc provider available"
 }
 
 variable "tfc_hostname" {
@@ -35,12 +35,6 @@ variable "tfc_workspace_name" {
   description = "The name of the workspace that you'd like to create and connect to AWS"
 }
 
-variable "workspace_vcs_repo_name" {
-  type        = string
-  default     = "my-vcs-repo"
-  description = "The name of the VCS repo that you'd like to connect to the workspace"
-}
-
 variable "github_token" {
   type        = string
   description = "GitHub OAuth token used for GitHub provider"
@@ -54,3 +48,18 @@ variable "vcs_oauth_token_id" {
   default     = null
   sensitive   = true
 }
+
+variable "vcs_repo_configurations" {
+  description = "Settings for the workspace's VCS repository, enabling VCS-driven run workflow."
+  type = object({
+    branch             = optional(string, null)
+    identifier         = string
+    ingress_submodules = optional(bool, false)
+    oauth_token_id     = optional(string, null)
+    tags_regex         = optional(string, null)
+    working_dir        = optional(string, "/")
+  })
+
+  default = null
+}
+

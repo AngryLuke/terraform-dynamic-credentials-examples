@@ -16,7 +16,7 @@ data "tfe_project" "proj" {
 
 # Fetch full_name of repository name
 data "github_repository" "repo" {
-  name = var.workspace_vcs_repo_name
+  name = var.vcs_repo_configurations.identifier
 }
 
 # Runs in this workspace will be automatically authenticated
@@ -24,14 +24,16 @@ data "github_repository" "repo" {
 #
 # https://registry.terraform.io/providers/hashicorp/tfe/latest/docs/resources/workspace
 resource "tfe_workspace" "my_workspace" {
-  name         = var.tfc_workspace_name
-  organization = var.tfc_organization_name
-  project_id   = data.tfe_project.proj.id
-  auto_apply   = true
+  name              = var.tfc_workspace_name
+  organization      = var.tfc_organization_name
+  project_id        = data.tfe_project.proj.id
+  auto_apply        = true
+  working_directory = var.vcs_repo_configurations.working_dir
 
   # set the VCS workflow and add a repo to the workspace
   vcs_repo {
-    identifier     = data.github_repository.repo.full_name
+    identifier = data.github_repository.repo.full_name
+    # oauth_token_id = var.vcs_repo_configurations.oauth_token_id ? var.vcs_repo_configurations.oauth_token_id : var.vcs_oauth_token_id
     oauth_token_id = var.vcs_oauth_token_id
   }
 }
@@ -66,7 +68,7 @@ resource "tfe_variable" "tfc_aws_audience" {
   workspace_id = tfe_workspace.my_workspace.id
 
   key      = "TFC_AWS_WORKLOAD_IDENTITY_AUDIENCE"
-  value    = var.tfc_aws_audience
+  value    = one(data.aws_iam_openid_connect_provider.tfc_provider.client_id_list)
   category = "env"
 
   description = "The value to use as the audience claim in run identity tokens"

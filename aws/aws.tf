@@ -12,21 +12,27 @@ data "tls_certificate" "tfc_certificate" {
   url = "https://${var.tfc_hostname}"
 }
 
+# Fetch OIDC provider details which is restricted to
+#
+data "aws_iam_openid_connect_provider" "tfc_provider" {
+  url = data.tls_certificate.tfc_certificate.url
+}
+
 # Creates an OIDC provider which is restricted to
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_openid_connect_provider
-resource "aws_iam_openid_connect_provider" "tfc_provider" {
-  url             = data.tls_certificate.tfc_certificate.url
-  client_id_list  = [var.tfc_aws_audience]
-  thumbprint_list = [data.tls_certificate.tfc_certificate.certificates[0].sha1_fingerprint]
-}
+# resource "aws_iam_openid_connect_provider" "tfc_provider" {
+#   url             = data.tls_certificate.tfc_certificate.url
+#   client_id_list  = [var.tfc_aws_audience]
+#   thumbprint_list = [data.tls_certificate.tfc_certificate.certificates[0].sha1_fingerprint]
+# }
 
 # Creates a role which can only be used by the specified Terraform
 # cloud workspace.
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role
 resource "aws_iam_role" "tfc_role" {
-  name = "tfc-role"
+  name = "eks-tfc-role"
 
   assume_role_policy = <<EOF
 {
@@ -35,12 +41,12 @@ resource "aws_iam_role" "tfc_role" {
    {
      "Effect": "Allow",
      "Principal": {
-       "Federated": "${aws_iam_openid_connect_provider.tfc_provider.arn}"
+       "Federated": "${var.tfc_oidc_arn}"
      },
      "Action": "sts:AssumeRoleWithWebIdentity",
      "Condition": {
        "StringEquals": {
-         "${var.tfc_hostname}:aud": "${one(aws_iam_openid_connect_provider.tfc_provider.client_id_list)}"
+         "${var.tfc_hostname}:aud": "${one(data.aws_iam_openid_connect_provider.tfc_provider.client_id_list)}"
        },
        "StringLike": {
          "${var.tfc_hostname}:sub": "organization:${var.tfc_organization_name}:project:${var.tfc_project_name}:workspace:${var.tfc_workspace_name}:run_phase:*"
@@ -57,7 +63,7 @@ EOF
 #
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy
 resource "aws_iam_policy" "tfc_policy" {
-  name        = "ec2-tfc-policy"
+  name        = "eks-tfc-policy"
   description = "TFC run policy"
 
   policy = <<EOF
@@ -65,9 +71,11 @@ resource "aws_iam_policy" "tfc_policy" {
  "Version": "2012-10-17",
  "Statement": [
    {
+     "Sid": "Terraform",
      "Effect": "Allow",
      "Action": [
-       "ec2:*"
+       "emr-containers:*", 
+       "eks:*"
      ],
      "Resource": "*"
    }
